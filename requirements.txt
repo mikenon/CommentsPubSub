@@ -1,0 +1,3 @@
+Twisted==13.0.0
+autobahn==0.5.14
+zope.interface==4.0.5
