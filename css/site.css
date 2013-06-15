@@ -1,0 +1,67 @@
+body {
+	position: relative;
+	padding-top: 50px;
+}
+.comments, .comment {
+	position: relative;
+}
+.comments {
+	box-shadow: 0 0 0 0, -7px 0px 7px 0px rgba(225, 225, 225, 0.2), 0 0 0 0, 7px 0px 7px 0px rgba(225, 225, 225, 0.2);
+	-webkit-box-shadow: 0 0 0 0, -7px 0px 7px 0px rgba(225, 225, 225, 0.2), 0 0 0 0, 7px 0px 7px 0px rgba(225, 225, 225, 0.2);
+	border-left: 1px solid #d2d2d2;
+	border-right: 1px solid #d2d2d2;
+	border-bottom: 2px solid #ddd;
+	position: relative;
+	width: 100%;
+	padding: 1px 0;
+	height: 30em;
+	overflow-y: scroll;
+}
+.comment {
+	background: #fff;
+	border-bottom: 1px solid #b5b5b5;
+	cursor: pointer;
+}
+.meta {
+	background: rgb(193, 228, 241);
+	border-bottom: 1px solid #b5b5b5;
+	cursor: pointer;
+}
+.comment .top, .meta .top {
+	margin-top: 1em;
+	margin-bottom: -0.5em;
+	padding-left: 0.7em;
+	padding-right: 0.7em;
+}
+.comment ul, .meta ul {
+	margin: 0;
+	padding: 0;
+	clear: both;
+	list-style: none;
+}
+.comment li, .meta li {
+	list-style-type: none;
+}
+.comment .cthread, .meta .cthread {
+	float: left;
+	font-size: 110%;
+	color: #606090;
+}
+.comment .csubreddit, .meta .csubreddit {
+	float: right;
+	font-size: 120%;
+	color: #66A;
+}
+.comment .cbody, .meta .cbody {
+	position: relative;
+	margin: 1em;
+}
+.comment .bottom, .meta .bottom {
+	position: relative;
+	display: block;
+	margin: 1em;
+	padding-right: 8em;
+	clear: both;
+	color: #999999;
+	font-size: 90%;
+}

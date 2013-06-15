@@ -1,1 +1,258 @@
-My GitHub Page
+<!DOCTYPE html>
+<html>
+	<head>
+		<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+		<link href="css/multi-select.css" media="screen" rel="stylesheet" type="text/css">
+		<link href="css/site.css" media="screen" rel="stylesheet" type="text/css">
+	</head>
+	<body>
+		<div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a href="" class="brand">Comments</a>
+                    <div class="nav-collapse">
+                        <ul class="nav">
+						    <li class="active">
+						        <a href="">Here</a>
+						    </li>
+					    </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+        	<div class="row">
+        		<div class="span5">
+        			<h2>Select Reddits</h2>
+        		</div>
+        		<div class="span7">
+        			<h2>Watch Comments</h2>
+        		</div>
+        	</div>
+        	<div class="row">
+        		<div class="span5">
+        			<div class="row">
+	        			<select id='searchable' multiple='multiple'></select>
+					</div>
+					<div class="row">
+						<p>Search for a subreddit, or add one to the list.</p>
+						<div class="input-prepend input-append">
+							<span class="add-on">/r/</span>
+							<input class="span2" id="search" type="text" autocomplete="off" placeholder="funny">
+							<button id="searchbtn" class="btn" type="button">Add</button>
+						</div>
+					</div>
+					<div class="row">
+						<h3>Why?</h3>
+	        			<p>It was time for me to learn about websockets.</p>
+	        			<h3>How?</h3>
+	        			<p><a href="http://www.reddit.com/user/Stuck_In_the_Matrix" target="_blank">/u/Stuck_In_the_Matrix</a> recently released a tool that provides a continous stream of comments. I read that stream and publish comments to my PubSub server, which this website connects to.</p>
+	        			<h3>Is this stable?</h3>
+	        			<p>Sort of. The underlying websocket server is being run as a service. I wouldn't suggest building anything you aren't willing to have break, though.</p>
+					</div>
+        		</div>
+        		<div class="span7">
+        			<div class="comments" id="commentlist">
+					</div>
+        		</div>
+        	</div>
+        </div>
+		<script src="http://autobahn.s3.amazonaws.com/js/autobahn.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+		<script src="js/jquery.multi-select.js" type="text/javascript"></script>
+		<script src="js/jquery.quicksearch.js" type="text/javascript"></script>
+		<script src="js/redditlist.js" type="text/javascript"></script>
+		<script>
+			// WAMP session object
+			var sess = null;
+			var comlist = null;
+			var hOffset = 0;
+			var idlist = new Array();
+			window.onload = function() {
+
+				var wsuri;
+				comlist = document.getElementById('commentlist');
+				hOffset = comlist.scrollHeight;
+				if (window.location.protocol === "file:") {
+					wsuri = "ws://localhost:9000";
+				} else {
+					wsuri = "ws://test.cyberstalk.me:9000";
+				}
+
+				// connect to WAMP server
+				ab.connect(wsuri,
+
+				// WAMP session was established
+				function(session) {
+					sess = session;
+					console.log("Connected to " + wsuri);
+					comlist.innerHTML += '<b>Connected to</b>: '+wsuri+'<br>'
+					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#status", onMeta);
+					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#join", onMeta);
+					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#leave", onMeta);
+				},
+
+				// WAMP session is gone
+				function(code, reason) {
+
+					sess = null;
+
+					if (code == ab.CONNECTION_UNSUPPORTED) {
+						window.location = "http://autobahn.ws/unsupportedbrowser";
+					} else {
+						console.log(reason);
+						comlist.innerHTML += '<b>Error</b>: '+reason+'<br>'
+					}
+				});
+				
+				if (!String.prototype.format) {
+					String.prototype.format = function() {
+						var args = arguments;
+						return this.replace(/{(\d+)}/g, function(match, number) { 
+							return typeof args[number] != 'undefined' ? args[number] : match;
+						});
+					};
+				}
+			};
+
+			var formatTime = function(t) {
+			    var d = new Date(t * 1000);
+			    var h = d.getHours();
+			    var m = d.getMinutes();
+			    var s = d.getSeconds();
+			    if (h < 10) h = '0' + h;
+			    if (m < 10) m = '0' + m;
+			    if (s < 10) s = '0' + s;
+			    return h + ":" + m + ":" + s;
+			}    
+			
+			function getHtml(type,data){
+				var a = "<div class=\"comment\" id=\"{0}\"><ul class=\"top\"><li class=\"clearfix\">" +
+						"<a href=\"http://www.reddit.com/comments/{1}\" target=\"_blank\"><span class=\"cthread\">{2}</span></a>" +
+						"<a href=\"http://www.reddit.com/r/{3}\" target=\"_blank\"><span class=\"csubreddit\">/r/{3}</span></a>" +
+						"</li></ul><div class=\"cbody\" onclick=\"new_window('{1}','{4}')\">{5}</div>" +
+    					"<div class=\"bottom\">{6} &nbsp; By:" +
+    					"<a href=\"http://www.reddit.com/user/{7}\" target=\"_blank\">{7}</a></div></div>"
+    			
+    			var b = "<div class=\"meta\" id=\"{0}\"><ul class=\"top\"><li class=\"clearfix\">" +
+						"<a href=\"#\"><span class=\"cthread\">{1}</span></a>" +
+						"<a href=\"#\"><span class=\"csubreddit\">Meta</span></a>" +
+						"</li></ul><div class=\"cbody\">{2}</div>" +
+    					"<div class=\"bottom\"></div></div>"		
+    					
+				if(type==1){
+					short_t3 = data.link_id.replace("t3_","")
+					return a.format(data.name, short_t3, data.link_title, data.subreddit, data.id, data.body, formatTime(data.created_utc), data.author)
+				} else if(type==2){
+					if(data.type=='join'){
+						msg = 'Someone in '+data.geo+' joined the PubSub. '+data.count+' total connections.'
+						return b.format(data.count, data.type, msg)
+					}
+					if(data.type=='leave'){
+						msg = 'Someone in '+data.geo+' left the PubSub. '+data.count+' total connections. ['+data.reason+']'
+						return b.format(data.count, data.type, msg)
+					}
+					if(data.type=='status'){
+						if (data.connected == true){
+							msg = "PubSub Server has connected to RedditAnalytics.com's comment stream"
+						} else {
+							if(data.reconnecting){
+								msg = "PubSub Server reconnecting to RedditAnalytics.com's comment stream. " + data.reason
+							} else {
+								msg = "PubSub Server has disconnected from RedditAnalytics.com's comment stream. " + data.reason
+							}
+							
+						}
+						return b.format(data.count, data.type, msg)
+					}
+				}
+				return ""
+			}
+			
+			function popTheTop(id){
+				if(idlist.length>20){
+					while(idlist.length>20){
+						delid = idlist.shift()
+						$('#'+delid).remove()
+					}
+				}
+			}
+			
+			function onComment(topic,event){
+				onIncoming(1,topic,event);
+			}
+			
+			function onMeta(topic,event){
+				onIncoming(2,topic,event);
+			}
+			
+			function onIncoming(type,topic,event){
+				curScroll = comlist.scrollTop;
+				curHeight = comlist.scrollHeight;
+				comlist.innerHTML += getHtml(type,event) + '\n';
+				idlist.push(event.name)
+				if (curScroll+hOffset+10 >= curHeight){
+					popTheTop(event.name);
+					comlist.scrollTop = comlist.scrollHeight;
+				}
+			}			
+			
+			function new_window(link_id,comment_id){
+				url = 'http://www.reddit.com/comments/'+link_id+'/a/'+comment_id
+				window.open(url)
+			}
+
+		</script>
+		<script>
+			$.each(redditlist.all, function(key,value) {   
+			     $('#searchable')
+			         .append($("<option></option>")
+			         .attr("value",value)
+			         .text(value)); 
+			});
+			$('#searchable').multiSelect({
+				afterSelect: function(values){
+					sess.subscribe("http://test.cyberstalk.me/pubsub/subreddit#"+values, onComment);
+				},
+				afterDeselect: function(values){
+					sess.unsubscribe("http://test.cyberstalk.me/pubsub/subreddit#"+values);
+				}
+			});
+			$('#search').quicksearch($('.ms-elem-selectable', '#ms-searchable' )).on('keydown', function(e){
+				if (e.keyCode == 38 || e.keyCode == 13 || e.keyCode == 9){
+					$(this).trigger('focusout');
+					$('#searchable').focus();
+					return false;
+				}
+			});
+			$('#searchbtn').click(function() {
+		        var term = $('#search').val()
+		        var exists = 0 != $('#searchable option[value='+term+']').length;
+		        $('#search').val('')
+				
+				if(exists==false){
+					$('#searchable')
+				         .prepend($("<option></option>")
+				         .attr("value",term)
+				         .text(term));
+		         	$('#searchable').multiSelect('refresh');
+				}
+	         	$('#searchable').multiSelect('select', term);
+			})
+		</script>
+		<script>
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			ga('create', 'UA-26194230-2', 'cyberstalk.me');
+			ga('send', 'pageview');
+		</script>
+	</body>
+</html>
