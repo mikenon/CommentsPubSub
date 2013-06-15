@@ -35,4 +35,4 @@ if __name__ == "__main__":
     reactor.run()
 ```
 
-pubsub_server.py isn't much more complicated, thanks to the Autobahn library. I'm setting up an example website now.
+pubsub_server.py isn't much more complicated, thanks to the Autobahn library. See it live at [mikenon.github.com](http://mikenon.github.io/CommentsPubSub/)
