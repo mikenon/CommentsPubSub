@@ -103,10 +103,19 @@
 					sess = null;
 
 					if (code == ab.CONNECTION_UNSUPPORTED) {
-						window.location = "http://autobahn.ws/unsupportedbrowser";
+						console.log('Your browser is not supported. This page may not function correctly.')
+						msg = '<div class="alert alert-error">' +
+							'<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+							'<strong>Warning!</strong> Your browser is not supported. This page may not function correctly.' +
+						'</div>'
+						onWSError(msg)
 					} else {
 						console.log(reason);
-						comlist.innerHTML += '<b>Error</b>: '+reason+'<br>'
+						msg = '<div class="alert">' +
+							'<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+							'<strong>Error</strong> ' + reason
+						'</div>'
+						onWSError(msg)
 					}
 				});
 				
@@ -189,6 +198,10 @@
 			
 			function onMeta(topic,event){
 				onIncoming(2,topic,event);
+			}
+			
+			function onWSError(msg){
+				comlist.innerHTML += msg + '\n';
 			}
 			
 			function onIncoming(type,topic,event){
