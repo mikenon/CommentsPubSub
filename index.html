@@ -235,7 +235,7 @@
 					if (values != null){
 						$.each(values, function(key,value) {
 							subid = "http://test.cyberstalk.me/pubsub/subreddit#"+value
-							if !(subid in sess._subscriptions){
+							if ((subid in sess._subscriptions)==false){
 								sess.subscribe(subid, onComment);
 							}
 						});
