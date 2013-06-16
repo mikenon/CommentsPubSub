@@ -73,6 +73,7 @@
 			var comlist = null;
 			var hOffset = 0;
 			var idlist = new Array();
+			var listloaded = false;
 			window.onload = function() {
 
 				var wsuri;
@@ -91,7 +92,11 @@
 				function(session) {
 					sess = session;
 					console.log("Connected to " + wsuri);
-					comlist.innerHTML += '<b>Connected to</b>: '+wsuri+'<br>'
+					msg = '<strong>Connected to</strong>: '+wsuri
+					onWs(msg,'alert-success')
+					if (listloaded != false){
+						$('#searchable').multiSelect('deselect_all');
+					}
 					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#status", onMeta);
 					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#join", onMeta);
 					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#leave", onMeta);
@@ -104,18 +109,12 @@
 
 					if (code == ab.CONNECTION_UNSUPPORTED) {
 						console.log('Your browser is not supported. This page may not function correctly.')
-						msg = '<div class="alert alert-error">' +
-							'<button type="button" class="close" data-dismiss="alert">&times;</button>' +
-							'<strong>Warning!</strong> Your browser is not supported. This page may not function correctly.' +
-						'</div>'
-						onWSError(msg)
+						msg = '<strong>Error</strong> Your browser is not supported. This page may not function correctly.'
+						onWs(msg,'alert-error')
 					} else {
 						console.log(reason);
-						msg = '<div class="alert">' +
-							'<button type="button" class="close" data-dismiss="alert">&times;</button>' +
-							'<strong>Error</strong> ' + reason
-						'</div>'
-						onWSError(msg)
+						msg = '<strong>Warning</strong> ' + reason
+						onWs(msg,'')
 					}
 				});
 				
@@ -200,8 +199,11 @@
 				onIncoming(2,topic,event);
 			}
 			
-			function onWSError(msg){
-				comlist.innerHTML += msg + '\n';
+			function onWs(msg,mclass){
+				a = '<div class="alert ' + mclass + '">' +
+					'<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+					msg + '</div>'
+				comlist.innerHTML += a + '\n';
 			}
 			
 			function onIncoming(type,topic,event){
@@ -230,12 +232,27 @@
 			});
 			$('#searchable').multiSelect({
 				afterSelect: function(values){
-					sess.subscribe("http://test.cyberstalk.me/pubsub/subreddit#"+values, onComment);
+					if (values != null){
+						$.each(values, function(key,value) {
+							subid = "http://test.cyberstalk.me/pubsub/subreddit#"+value
+							if !(subid in sess._subscriptions){
+								sess.subscribe(subid, onComment);
+							}
+						});
+					}
 				},
 				afterDeselect: function(values){
-					sess.unsubscribe("http://test.cyberstalk.me/pubsub/subreddit#"+values);
+					if (values != null){
+						$.each(values, function(key,value) {
+							subid = "http://test.cyberstalk.me/pubsub/subreddit#"+value
+							if (subid in sess._subscriptions){
+								sess.unsubscribe(subid);
+							}
+						});
+					}
 				}
 			});
+			listloaded = true;
 			$('#search').quicksearch($('.ms-elem-selectable', '#ms-searchable' )).on('keydown', function(e){
 				if (e.keyCode == 38 || e.keyCode == 13 || e.keyCode == 9){
 					$(this).trigger('focusout');
