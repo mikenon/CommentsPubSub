@@ -20,6 +20,12 @@
 						    <li class="active">
 						        <a href="">Here</a>
 						    </li>
+						    <li>
+						        <a href="about.html">About</a>
+						    </li>
+						    <li>
+						        <a href="code.html">Code</a>
+						    </li>
 					    </ul>
                     </div>
                 </div>
@@ -75,7 +81,7 @@
 				if (window.location.protocol === "file:") {
 					wsuri = "ws://localhost:9000";
 				} else {
-					wsuri = "ws://test.cyberstalk.me:9000";
+					wsuri = "ws://" + window.location.hostname + ":9000";
 				}
 
 				// connect to WAMP server
