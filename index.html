@@ -201,6 +201,7 @@
 							addSubreddits(hashlist)
 						}
 					}
+					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#error", onMeta);
 					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#status", onMeta);
 					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#join", onMeta);
 					sess.subscribe("http://test.cyberstalk.me/pubsub/meta#leave", onMeta);
@@ -281,6 +282,10 @@
 							}
 							
 						}
+						return b.format(data.count, data.type, msg)
+					}
+					if(data.type=='error'){
+						msg = "Server said: " + data.reason
 						return b.format(data.count, data.type, msg)
 					}
 				}
