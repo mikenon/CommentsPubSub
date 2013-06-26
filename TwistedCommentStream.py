@@ -145,7 +145,7 @@ class _CommentStreamFactory(protocol.ReconnectingClientFactory):
 
 def comments(consumer):
     cs = _CommentStreamFactory(consumer)
-    cs.make_header("GET", "/search/stream/")
+    cs.make_header("GET", "/stream/")
     reactor.connectTCP("dev.redditanalytics.com", 80, cs)
 
 def subreddit(consumer, subreddit=False):
@@ -154,5 +154,5 @@ def subreddit(consumer, subreddit=False):
         qs.append("subreddit=%s" % urllib.quote(subreddit))
 
     cs = _CommentStreamFactory(consumer)
-    cs.make_header("GET", "/search/stream/?" + "&".join(qs))
+    cs.make_header("GET", "/stream/?" + "&".join(qs))
     reactor.connectTCP("dev.redditanalytics.com", 80, cs)
